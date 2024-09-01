@@ -69,3 +69,87 @@ df.drop(['Close', 'Volume', 'Range', 'Hour', 'Minute'], axis=1, inplace=True)
 
 # Display final information about the dataframe
 df.info()
+
+
+# Calculate the average of the High and Low prices for each day
+df['Avg_High_Low'] = (df['High'] + df['Low']) / 2
+
+# Calculate the daily return percentage change in Adjusted Close price
+df['Daily_Return'] = df['Adj Close'].pct_change().fillna(0)
+
+# Display the first few rows of the DataFrame
+df.head()
+
+# Uncomment the following lines to calculate the rolling mean and standard deviation
+# These can be used to create Bollinger Bands
+
+#rolling_mean = df['Adj Close'].rolling(window=20).mean().fillna(method='bfill')
+#rolling_std = df['Adj Close'].rolling(window=20).std().fillna(method='bfill')
+#df['Bollinger_High'] = rolling_mean + (rolling_std * 2)
+#df['Bollinger_Low'] = rolling_mean - (rolling_std * 2)
+
+# Display the summary information about the DataFrame
+df.info()
+
+# Create a column for the next day's Adjusted Close price (for prediction)
+df['Next_Close'] = df['Adj Close'].shift(-1)
+
+# Remove any rows with missing values (usually the last row due to shifting)
+df.dropna(inplace=True)
+
+# Uncomment the following line to calculate the correlation matrix
+# for a specific set of columns, including Open, High, Low, Volume, etc.
+
+#df[['Open', 'High', 'Low','Volume','Range','Hour', 'Minute', 'Next_Close', 'Avg_High_Low']].corr()
+
+# Calculate and display the correlation matrix for the selected columns
+df[['Open', 'High', 'Low','Adj Close' ,'Next_Close', 'Avg_High_Low', 'Daily_Return']].corr()
+
+# Set the figure size for the heatmap plot
+plt.figure(figsize=(10, 6))
+
+# Uncomment the following lines to plot the heatmap of correlations
+# including the Open, High, Low, Volume, Range, etc.
+
+#sns.heatmap(df[['Open', 'High', 'Low', 'Volume', 'Range','Hour', 'Minute', 'Next_Close', 'Avg_High_Low']].corr(), annot=True, cmap='coolwarm')
+#sns.heatmap(df[['Open', 'High', 'Low', 'Volume', 'Range','Hour', 'Minute', 'Next_Close', 'Avg_High_Low']].corr(), annot=True, cmap='coolwarm')
+
+# Plot the heatmap of the correlation matrix for the selected columns
+sns.heatmap(df[['Open', 'High', 'Low','Adj Close' ,'Next_Close', 'Avg_High_Low', 'Daily_Return']].corr(), annot=True, cmap='coolwarm')
+
+# Display the correlation matrix again (for confirmation)
+df[['Open', 'High', 'Low','Adj Close' ,'Next_Close', 'Avg_High_Low', 'Daily_Return']].corr()
+
+# Uncomment the following block to scale the selected features using MinMaxScaler
+# This is useful for preparing the data for machine learning models
+
+'''
+from sklearn.preprocessing import MinMaxScaler
+
+# Initialize the MinMaxScaler
+scaler = MinMaxScaler()
+
+# Fit the scaler on the selected features and transform them
+scaler.fit(df[['Open', 'High', 'Low','Adj Close', 'Avg_High_Low', 'Daily_Return']])
+scaled_features = scaler.transform(df[['Open', 'High', 'Low','Adj Close', 'Avg_High_Low', 'Daily_Return']])
+
+# Create a new DataFrame with the scaled features
+scaled_df = pd.DataFrame(scaled_features, columns=['Open', 'High', 'Low','Adj Close', 'Avg_High_Low', 'Daily_Return'])
+
+# Display the first few rows of the scaled DataFrame
+print(scaled_df.head())
+'''
+
+# Uncomment the following block to split the data into training and testing sets
+
+'''
+from sklearn.model_selection import train_test_split
+
+# Define the features (X) and the target variable (y)
+X = scaled_df
+y = df['Next_Close'].reset_index(drop=True)
+
+# Split the data into training and testing sets (70% train, 30% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=101)
+'''
+
