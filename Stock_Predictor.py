@@ -153,3 +153,134 @@ y = df['Next_Close'].reset_index(drop=True)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=101)
 '''
 
+
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.preprocessing import MinMaxScaler
+
+# Assuming df contains your entire dataset including 'Next_Close'
+X = df[['Open', 'High', 'Low', 'Adj Close', 'Avg_High_Low', 'Daily_Return']]
+y = df['Next_Close']
+
+# Scale features
+scaler = MinMaxScaler()
+scaled_features = scaler.fit_transform(X)
+scaled_df = pd.DataFrame(scaled_features, columns=['Open', 'High', 'Low', 'Adj Close', 'Avg_High_Low', 'Daily_Return'])
+
+# Train on the entire dataset
+knn = KNeighborsRegressor(n_neighbors=5)
+knn.fit(scaled_df, y)
+
+# Predict on the entire dataset
+df['Predicted_Close'] = knn.predict(scaled_df)
+
+# Save to CSV
+df.to_csv('data_with_predictions.csv', index=False)
+
+
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+# For the entire dataset (if you want to evaluate)
+predict = df['Predicted_Close']
+actual = df['Next_Close']
+
+# Print the Mean Absolute Error (MAE) between the actual and predicted values
+print("Mean Absolute Error:", mean_absolute_error(actual, predict))
+
+# Print the Mean Squared Error (MSE) between the actual and predicted values
+print("Mean Squared Error:", mean_squared_error(actual, predict))
+
+# Print the Root Mean Squared Error (RMSE) by taking the square root of the MSE
+print("Root Mean Squared Error:", np.sqrt(mean_squared_error(actual, predict)))
+
+# Scatter plot of actual vs. predicted
+plt.figure(figsize=(10, 6))
+plt.scatter(actual, predict)
+plt.xlabel('Actual')
+plt.ylabel('Predicted')
+plt.title('Actual vs Predicted')
+plt.show()
+
+X.info()
+
+# Initialize an empty list to store error rates for different values of K
+error_rate = []
+
+# Loop over a range of K values from 1 to 39
+for i in range(1, 40):
+    # Create a KNeighborsRegressor model with the current K value (number of neighbors)
+    model = KNeighborsRegressor(n_neighbors=i)
+    
+    # Fit the model to the training data
+    model.fit(X_train, y_train)
+    
+    # Predict the target values for the test data
+    pred_i = model.predict(X_test)
+    
+    # Calculate the mean error rate by checking the difference between predictions and actual values
+    # Append the calculated error rate to the error_rate list
+    error_rate.append(np.mean(pred_i != y_test))
+
+# Create a plot to visualize the error rate against the K values
+plt.figure(figsize=(10,6))
+plt.plot(range(1, 40), error_rate)
+plt.title('Error Rate vs. K Value')  # Set the title of the plot
+plt.xlabel('K')  # Label the x-axis as 'K'
+plt.ylabel('Error Rate')  # Label the y-axis as 'Error Rate'
+
+
+# Create a new DataFrame with a single row of stock data for prediction
+new_data = pd.DataFrame({
+    'Open': [126.4],
+    'High': [126.69],
+    'Low': [126.38],
+    'Adj Close': [126.47],
+})
+
+# Calculate the average of the high and low prices and add it as a new column
+new_data['Avg_High_Low'] = (new_data['High'] + new_data['Low']) / 2
+
+# (Optional) Calculate the range between high and low prices and add it as a new column
+# This line is commented out, but you can uncomment it to include the 'Range' column
+# new_data['Range'] = new_data['High'] - new_data['Low']
+
+# Calculate the daily return as the percentage change of the adjusted close price
+# Since there is only one row, use fillna(0) to handle the NaN result from pct_change
+new_data['Daily_Return'] = new_data['Adj Close'].pct_change().fillna(0)
+
+# Scale the new data using the previously fitted scaler
+new_data_scaled = scaler.transform(new_data)
+
+# Use the trained KNN model to predict the target variable (e.g., future stock price) for the new data
+prediction = knn.predict(new_data_scaled)
+
+
+# Create a DataFrame to compare the actual values with the predicted values
+comparison_df = pd.DataFrame({
+    'Actual': y_test.values,  # Store the actual values from the test set
+    'Predicted': predict      # Store the predicted values from the model
+})
+
+# Display the first 50 rows of the comparison DataFrame to review the comparison between actual and predicted values
+comparison_df.head(50)
+
+
+comparison_df.corr()
+
+
+
+
+# Create a scatter plot to visualize the relationship between actual and predicted values
+plt.scatter(y_test, predict)
+
+# Label the x-axis as 'Actual' to represent the actual values from the test set
+plt.xlabel('Actual')
+
+# Label the y-axis as 'Predicted' to represent the predicted values from the model
+plt.ylabel('Predicted')
+
+# Set the title of the plot to 'Actual vs Predicted'
+plt.title('Actual vs Predicted')
+
+# Display the plot
+plt.show()
