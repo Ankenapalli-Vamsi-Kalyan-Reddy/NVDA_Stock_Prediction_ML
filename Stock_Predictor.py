@@ -203,30 +203,32 @@ plt.show()
 
 X.info()
 
+
+
 # Initialize an empty list to store error rates for different values of K
 error_rate = []
-
 # Loop over a range of K values from 1 to 39
 for i in range(1, 40):
     # Create a KNeighborsRegressor model with the current K value (number of neighbors)
     model = KNeighborsRegressor(n_neighbors=i)
-    
-    # Fit the model to the training data
-    model.fit(X_train, y_train)
-    
-    # Predict the target values for the test data
-    pred_i = model.predict(X_test)
-    
-    # Calculate the mean error rate by checking the difference between predictions and actual values
-    # Append the calculated error rate to the error_rate list
-    error_rate.append(np.mean(pred_i != y_test))
 
-# Create a plot to visualize the error rate against the K values
-plt.figure(figsize=(10,6))
+    # Fit the model to the training data
+    model.fit(scaled_df, y)
+
+    # Predict the target values for the test data
+    pred_i = model.predict(scaled_df)
+
+    # Calculate the mean error rate by checking the difference between predictions and actual values
+    # Append the calculated error rate to the error_rate list    
+    error_rate.append(np.mean(pred_i != y))
+
+# Plot the error rate against the K values
+plt.figure(figsize=(10, 6))
 plt.plot(range(1, 40), error_rate)
-plt.title('Error Rate vs. K Value')  # Set the title of the plot
-plt.xlabel('K')  # Label the x-axis as 'K'
-plt.ylabel('Error Rate')  # Label the y-axis as 'Error Rate'
+plt.title('Error Rate vs. K Value')
+plt.xlabel('K')
+plt.ylabel('Error Rate')
+plt.show()
 
 
 # Create a new DataFrame with a single row of stock data for prediction
@@ -257,8 +259,8 @@ prediction = knn.predict(new_data_scaled)
 
 # Create a DataFrame to compare the actual values with the predicted values
 comparison_df = pd.DataFrame({
-    'Actual': y_test.values,  # Store the actual values from the test set
-    'Predicted': predict      # Store the predicted values from the model
+    'Actual': df['Next_Close'],  # Store the actual values from the test set
+    'Predicted': df['Predicted_Close']      # Store the predicted values from the model
 })
 
 # Display the first 50 rows of the comparison DataFrame to review the comparison between actual and predicted values
@@ -268,19 +270,12 @@ comparison_df.head(50)
 comparison_df.corr()
 
 
+# Display the DataFrame
 
-
-# Create a scatter plot to visualize the relationship between actual and predicted values
-plt.scatter(y_test, predict)
-
-# Label the x-axis as 'Actual' to represent the actual values from the test set
+plt.figure(figsize=(10, 6))
+plt.scatter(df['Next_Close'], df['Predicted_Close'])
 plt.xlabel('Actual')
-
-# Label the y-axis as 'Predicted' to represent the predicted values from the model
 plt.ylabel('Predicted')
-
-# Set the title of the plot to 'Actual vs Predicted'
 plt.title('Actual vs Predicted')
-
-# Display the plot
 plt.show()
+
